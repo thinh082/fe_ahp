@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hệ hỗ trợ chọn địa điểm kinh doanh - Bản đồ</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" />
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/toast.css">
+  <link rel="stylesheet" href="css/chatbot.css">
+</head>
+
+<body class="map-page">
+
+  <!-- Full-screen Map -->
+  <main id="map"></main>
+
+  <!-- ── Floating Sidebar ── -->
+  <aside class="map-sidebar" id="mapSidebar">
+    <!-- Sidebar Toggle Button -->
+    <button class="sidebar-toggle" id="sidebarToggle" title="Ẩn/Hiện bảng điều khiển">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="6" x2="21" y2="6" />
+        <line x1="3" y1="12" x2="21" y2="12" />
+        <line x1="3" y1="18" x2="21" y2="18" />
+      </svg>
+    </button>
+
+    <!-- Header -->
+    <div class="map-sidebar-header">
+      <div class="map-sidebar-logo">
+        <div class="map-logo-icon">🗺️</div>
+        <div>
+          <div class="map-logo-title">AHP <span>Map</span></div>
+          <div class="map-logo-sub">Phân tích địa điểm</div>
+        </div>
+      </div>
+      <a href="index.html" class="map-back-btn" title="Quay lại Dashboard">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15,18 9,12 15,6" />
+        </svg>
+        Dashboard
+      </a>
+    </div>
+
+    <!-- Stats -->
+    <div class="map-stats">
+      <div class="map-stat-card">
+        <div class="map-stat-label">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px; vertical-align:middle;">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+          Địa điểm
+        </div>
+        <div id="total-locations" class="map-stat-value">0</div>
+      </div>
+    </div>
+
+
+    <!-- Legend -->
+    <div class="map-legend">
+      <div class="map-legend-title">Chú thích bản đồ</div>
+      <div id="legend-list"></div>
+    </div>
+  </aside>
+
+  <!-- ── Sidebar Close Button (outside sidebar when hidden) ── -->
+  <button class="sidebar-open-btn hidden" id="sidebarOpenBtn" title="Mở bảng điều khiển">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+      stroke-linecap="round" stroke-linejoin="round">
+      <line x1="3" y1="6" x2="21" y2="6" />
+      <line x1="3" y1="12" x2="21" y2="12" />
+      <line x1="3" y1="18" x2="21" y2="18" />
+    </svg>
+  </button>
+
+  <!-- ── Criteria Panel (floating center) ── -->
+  <div id="criteriaPanel" class="criteria-float-panel hidden" style="display:none">
+    <div class="criteria-form-header">
+      <div class="cfp-header-left">
+        <div class="cfp-icon">📊</div>
+        <div>
+          <h4 class="cfp-title">Tiêu chí AHP</h4>
+          <p class="cfp-subtitle">Điều chỉnh mức quan trọng của từng tiêu chí</p>
+        </div>
+      </div>
+      <span onclick="closeCriteriaPanel()" class="criteria-close">&times;</span>
+    </div>
+    <div class="criteria-form-body">
+      <div class="cfp-hint">
+        <span class="cfp-hint-icon">💡</span>
+        Kéo thanh trượt (1–9), sau đó bấm <strong>Áp dụng</strong> để tính toán lại.
+      </div>
+      <div id="criteriaListAHP" class="criteria-list"></div>
+      <div style="margin-top:14px">
+        <button class="cfp-apply-btn" id="applyAHPBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          Áp dụng tiêu chí
+        </button>
+      </div>
+      <div id="criteriaCompareResult" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <!-- ── Comparison Modal (floating center) ── -->
+  <div id="compareModal" class="criteria-float-panel hidden" style="display:none">
+    <div class="criteria-form-header">
+      <div class="cfp-header-left">
+        <div class="cfp-icon">🔁</div>
+        <div>
+          <h4 class="cfp-title">So sánh địa điểm</h4>
+          <p class="cfp-subtitle">So sánh chi tiết 2 vị trí đã chọn</p>
+        </div>
+      </div>
+      <span onclick="closeCompareModal()" class="criteria-close">&times;</span>
+    </div>
+    <div class="criteria-form-body">
+      <div id="compareModalResult"></div>
+    </div>
+  </div>
+
+  <!-- ── Satellite View Modal ── -->
+  <div id="streetview-modal" class="streetview-modal hidden">
+    <div class="streetview-header">
+      <h3 id="streetview-title">Bản đồ vệ tinh 3D</h3>
+      <button id="streetview-close" class="streetview-close-btn">×</button>
+    </div>
+    <div id="streetview-container"></div>
+  </div>
+  <div id="streetview-backdrop" class="streetview-backdrop hidden"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://unpkg.com/@popperjs/core@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+  <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/chatbot.js"></script>
+  <script>
+    // ── Sidebar Toggle ──
+    const sidebar = document.getElementById('mapSidebar');
+    const toggleBtn = document.getElementById('sidebarToggle');
+    const openBtn = document.getElementById('sidebarOpenBtn');
+
+    toggleBtn.addEventListener('click', () => {
+      sidebar.classList.add('hidden');
+      openBtn.classList.remove('hidden');
+    });
+    openBtn.addEventListener('click', () => {
+      sidebar.classList.remove('hidden');
+      openBtn.classList.add('hidden');
+    });
+
+    // Auto-collapse sidebar on smaller screens
+    function checkSidebarResponsive() {
+      if (window.innerWidth <= 768) {
+        if (!sidebar.classList.contains('hidden')) {
+          sidebar.classList.add('hidden');
+          openBtn.classList.remove('hidden');
+        }
+      } else {
+        if (sidebar.classList.contains('hidden')) {
+          sidebar.classList.remove('hidden');
+          openBtn.classList.add('hidden');
+        }
+      }
+    }
+
+    // Check on load
+    checkSidebarResponsive();
+
+    // Check on resize
+    window.addEventListener('resize', checkSidebarResponsive);
+
+  </script>
+  <script src="js/toast.js"></script>
+</body>
+
+</html>

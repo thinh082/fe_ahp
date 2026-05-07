@@ -1,0 +1,1824 @@
+<!doctype html>
+<html class="light" lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>AHP Location - Hệ Thống Hỗ Trợ Quyết Định Địa Điểm</title>
+    <!-- Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Icons -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary-fixed": "#dae2ff",
+              "surface-bright": "#f8f9fa",
+              "tertiary-fixed": "#ffdbce",
+              "on-secondary": "#ffffff",
+              "on-tertiary": "#ffffff",
+              "on-surface": "#191c1d",
+              "surface-container-high": "#e7e8e9",
+              "surface-tint": "#0057ce",
+              "on-surface-variant": "#424655",
+              "outline-variant": "#c2c6d8",
+              "on-secondary-fixed-variant": "#3e4755",
+              "surface-container-highest": "#e1e3e4",
+              "secondary-container": "#d6e0f1",
+              "primary-fixed-dim": "#b1c5ff",
+              "on-primary": "#ffffff",
+              "on-secondary-container": "#596372",
+              "on-background": "#191c1d",
+              "on-primary-fixed-variant": "#00419e",
+              "inverse-on-surface": "#f0f1f2",
+              "error-container": "#ffdad6",
+              "on-secondary-fixed": "#121c28",
+              "on-error-container": "#93000a",
+              "inverse-primary": "#b1c5ff",
+              "surface-container-low": "#f3f4f5",
+              "surface-dim": "#d9dadb",
+              surface: "#f8f9fa",
+              background: "#f8f9fa",
+              "primary-container": "#0d6efd",
+              "tertiary-container": "#cf4b00",
+              "on-primary-fixed": "#001946",
+              outline: "#727787",
+              secondary: "#555f6d",
+              primary: "#0057cd",
+              error: "#ba1a1a",
+              "on-tertiary-fixed-variant": "#7f2b00",
+              "secondary-fixed": "#d9e3f4",
+              "on-tertiary-fixed": "#370e00",
+              tertiary: "#a63b00",
+              "tertiary-fixed-dim": "#ffb599",
+              "inverse-surface": "#2e3132",
+              "on-error": "#ffffff",
+              "on-primary-container": "#ffffff",
+              "surface-variant": "#e1e3e4",
+              "surface-container": "#edeeef",
+              "on-tertiary-container": "#ffffff",
+              "secondary-fixed-dim": "#bdc7d8",
+              "surface-container-lowest": "#ffffff",
+            },
+            fontFamily: {
+              headline: ["Manrope"],
+              body: ["Inter"],
+              label: ["Inter"],
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px",
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f8f9fa;
+        color: #191c1d;
+      }
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-family: "Manrope", sans-serif;
+      }
+      .material-symbols-outlined {
+        font-variation-settings:
+          "FILL" 0,
+          "wght" 400,
+          "GRAD" 0,
+          "opsz" 24;
+        vertical-align: middle;
+      }
+      .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+      }
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .ahp-matrix input[type="number"]::-webkit-inner-spin-button,
+      .ahp-matrix input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      .ahp-matrix input[type="number"] {
+        -moz-appearance: textfield;
+      }
+
+      /* ── Auth Modal ── */
+      #authModal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: rgba(15, 23, 42, 0.55);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        align-items: center;
+        justify-content: center;
+      }
+      #authModal.open {
+        display: flex;
+      }
+      #authModal .modal-box {
+        animation: modalIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      @keyframes modalIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px) scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+    </style>
+    <link rel="stylesheet" href="css/toast.css" />
+    <link rel="stylesheet" href="css/chatbot.css" />
+  </head>
+  <body
+    class="bg-surface selection:bg-primary-fixed selection:text-on-primary-fixed-variant"
+  >
+    <!-- ── Top Navigation ── -->
+    <header
+      class="fixed top-0 w-full z-50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-none"
+    >
+      <nav
+        class="flex justify-between items-center w-full px-6 py-4 max-w-7xl mx-auto"
+      >
+        <div
+          class="text-xl font-bold text-slate-900 dark:text-white tracking-tighter"
+        >
+          AHP Location
+        </div>
+        <div
+          class="hidden md:flex items-center gap-8 font-manrope font-semibold text-sm tracking-tight"
+        >
+          <a
+            id="nav-home"
+            class="nav-link text-blue-700 dark:text-blue-400 border-b-2 border-blue-700 dark:border-blue-400 pb-1 cursor-pointer select-none"
+            >Trang chủ</a
+          >
+          <a
+            id="nav-ahp"
+            class="nav-link text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors cursor-pointer select-none"
+            >Tính trọng số AHP</a
+          >
+          <a
+            id="nav-about"
+            class="nav-link text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors cursor-pointer select-none"
+            >Về chúng tôi</a
+          >
+          <a
+            id="nav-contact"
+            class="nav-link text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors cursor-pointer select-none"
+            >Liên hệ</a
+          >
+        </div>
+        <div id="authNavContainer" class="relative">
+          <button
+            id="openAuthBtn"
+            class="bg-primary hover:opacity-80 transition-all duration-300 text-white px-6 py-2.5 rounded-xl font-semibold text-sm scale-95 active:scale-90 shadow-lg shadow-primary/20 flex items-center gap-2"
+          >
+            <span class="material-symbols-outlined text-sm">login</span>
+            Đăng nhập
+          </button>
+
+          <!-- User Profile Dropdown -->
+          <div
+            id="userProfileDropdown"
+            class="hidden relative group cursor-pointer w-10 h-10"
+          >
+            <div
+              class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold border border-primary/20 hover:bg-primary/20 transition-all shadow-sm"
+            >
+              <span class="material-symbols-outlined">person</span>
+            </div>
+
+            <div
+              class="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 overflow-hidden origin-top-right transform group-hover:translate-y-0 translate-y-2 text-slate-800"
+            >
+              <div class="p-4 border-b border-slate-100 bg-slate-50">
+                <div
+                  id="dropdownUserName"
+                  class="font-bold text-sm text-slate-900 truncate"
+                >
+                  Thành viên
+                </div>
+                <div
+                  id="dropdownUserEmail"
+                  class="text-xs text-slate-500 mt-1 truncate"
+                >
+                  @
+                </div>
+              </div>
+              <div class="p-2">
+                <a
+                  id="btnGetProjects"
+                  href="#"
+                  class="flex items-center gap-3 px-3 py-2 text-sm hover:text-primary hover:bg-primary/5 rounded-lg transition-colors font-medium"
+                >
+                  <span class="material-symbols-outlined text-[18px]"
+                    >dashboard</span
+                  >
+                  Quản lý dự án
+                </a>
+                <a
+                  id="btnGetUserInfo"
+                  href="#"
+                  class="flex items-center gap-3 px-3 py-2 text-sm hover:text-primary hover:bg-primary/5 rounded-lg transition-colors font-medium"
+                >
+                  <span class="material-symbols-outlined text-[18px]"
+                    >person</span
+                  >
+                  Thông tin cá nhân
+                </a>
+              </div>
+              <div class="p-2 border-t border-slate-100">
+                <button
+                  id="logoutBtn"
+                  class="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left font-medium"
+                >
+                  <span class="material-symbols-outlined text-[18px]"
+                    >logout</span
+                  >
+                  Đăng xuất
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="pt-24 overflow-x-hidden">
+      <!-- ── View Home ── -->
+      <div
+        id="view-home"
+        class="page-view relative transition-all duration-300 opacity-100 block"
+      >
+        <!-- ── Hero Section ── -->
+        <section
+          class="relative px-6 py-20 md:py-32 max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-12"
+        >
+          <div class="flex-1 space-y-8">
+            <h1
+              class="text-5xl md:text-7xl font-bold text-on-surface leading-[1.1] tracking-tight"
+            >
+              Đánh giá địa điểm kinh doanh thông minh với
+              <span class="text-primary italic">AHP</span>
+            </h1>
+            <p class="text-xl text-on-surface-variant max-w-xl leading-relaxed">
+              Loại bỏ các quyết định mang tính cảm tính. So sánh và lựa chọn vị
+              trí tối ưu dựa trên dữ liệu định lượng và trọng số đa mục tiêu
+              chuẩn xác.
+            </p>
+            <div class="flex gap-4">
+              <button
+                id="openAuthBtn2"
+                class="bg-gradient-to-r from-primary to-primary-container text-white px-8 py-4 rounded-xl font-bold text-lg hover:opacity-90 transition-all shadow-xl shadow-primary/25 flex items-center gap-2"
+              >
+                Đăng nhập
+                <span class="material-symbols-outlined">arrow_forward</span>
+              </button>
+              <button
+                class="bg-surface-container-highest text-on-surface px-8 py-4 rounded-xl font-bold text-lg hover:bg-surface-container-high transition-all"
+              >
+                Xem hướng dẫn
+              </button>
+            </div>
+          </div>
+          <div class="flex-1 relative">
+            <div
+              class="w-full aspect-square rounded-[3rem] bg-surface-container-low overflow-hidden relative shadow-2xl"
+            >
+              <img
+                alt="Data Analytics Visual"
+                class="w-full h-full object-cover mix-blend-multiply opacity-80"
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAxM9ZqPlLT_E1fT31a4XG8pvGBLGB_cKkqwCUj9FQV4_1qBDvTQ_Zlgo5Xvwn5WwpHHj7C1hgF9QICdTzfx7tTvn42wNwwUEE1etxkhwA1f5d5s7tCaZtxhXLwanebfEUaFOE6Uy0S3dU-YUiAQUKrOTqSvl2p1d0-rNBj3HAi4Te5XQDv2pkZppiS8-eE78WgyzfayR1ic0MJ7Ojz5qIUYBlEjbkpV_0YdmZuEiXxezUz9h7_laQg2ffY07QEWvRImrlo4Jdm66g"
+              />
+              <div
+                class="absolute inset-0 bg-gradient-to-tr from-primary/10 to-transparent"
+              ></div>
+            </div>
+            <!-- Floating Card -->
+            <div
+              class="absolute -bottom-10 -left-10 glass-card p-6 rounded-2xl shadow-xl border border-white/20 hidden lg:block"
+            >
+              <div class="flex items-center gap-4">
+                <div
+                  class="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center text-green-600"
+                >
+                  <span class="material-symbols-outlined">check_circle</span>
+                </div>
+                <div>
+                  <div class="font-bold text-on-surface">
+                    Độ chính xác 98.4%
+                  </div>
+                  <div class="text-xs text-on-surface-variant">
+                    Đã xác thực tỷ lệ nhất quán (CR)
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Features Section ── -->
+        <section class="bg-surface-container-low py-24">
+          <div class="max-w-7xl mx-auto px-6">
+            <div
+              class="flex flex-col md:flex-row justify-between items-end mb-16 gap-4"
+            >
+              <div class="max-w-2xl">
+                <span
+                  class="text-primary font-bold tracking-widest text-xs uppercase"
+                  >Chỉ số cốt lõi</span
+                >
+                <h2 class="text-4xl font-bold mt-4">
+                  Tiêu chí đánh giá chuẩn xác
+                </h2>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+              <div
+                class="bg-surface-container-lowest p-10 rounded-3xl hover:translate-y-[-8px] transition-transform duration-500"
+              >
+                <span
+                  class="material-symbols-outlined text-4xl text-primary mb-6"
+                  >trending_up</span
+                >
+                <h3 class="font-bold text-lg mb-3">Doanh thu</h3>
+                <p class="text-sm text-on-surface-variant leading-relaxed">
+                  Mật độ khách hàng và tiềm năng tiêu thụ tại khu vực.
+                </p>
+              </div>
+              <div
+                class="bg-surface-container-lowest p-10 rounded-3xl hover:translate-y-[-8px] transition-transform duration-500"
+              >
+                <span
+                  class="material-symbols-outlined text-4xl text-primary mb-6"
+                  >directions_car</span
+                >
+                <h3 class="font-bold text-lg mb-3">Tiếp cận</h3>
+                <p class="text-sm text-on-surface-variant leading-relaxed">
+                  Giao thông thuận tiện, bãi đỗ xe và luồng người đi bộ.
+                </p>
+              </div>
+              <div
+                class="bg-surface-container-lowest p-10 rounded-3xl hover:translate-y-[-8px] transition-transform duration-500"
+              >
+                <span
+                  class="material-symbols-outlined text-4xl text-primary mb-6"
+                  >payments</span
+                >
+                <h3 class="font-bold text-lg mb-3">Chi phí thuê</h3>
+                <p class="text-sm text-on-surface-variant leading-relaxed">
+                  Giá thuê mặt bằng, điện nước và bảo trì hàng tháng.
+                </p>
+              </div>
+              <div
+                class="bg-surface-container-lowest p-10 rounded-3xl hover:translate-y-[-8px] transition-transform duration-500"
+              >
+                <span
+                  class="material-symbols-outlined text-4xl text-primary mb-6"
+                  >groups</span
+                >
+                <h3 class="font-bold text-lg mb-3">Cạnh tranh</h3>
+                <p class="text-sm text-on-surface-variant leading-relaxed">
+                  Khoảng cách tới các đối thủ trực tiếp và gián tiếp.
+                </p>
+              </div>
+              <div
+                class="bg-surface-container-lowest p-10 rounded-3xl hover:translate-y-[-8px] transition-transform duration-500"
+              >
+                <span
+                  class="material-symbols-outlined text-4xl text-primary mb-6"
+                  >warning</span
+                >
+                <h3 class="font-bold text-lg mb-3">Rủi ro</h3>
+                <p class="text-sm text-on-surface-variant leading-relaxed">
+                  Pháp lý, an ninh trật tự và sự ổn định của cộng đồng.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── AHP Matrix Section ── -->
+        <section class="py-24 max-w-7xl mx-auto px-6" id="calculator">
+          <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold">Ma trận So sánh Cặp AHP</h2>
+            <p class="text-on-surface-variant mt-4">
+              So sánh mức độ quan trọng giữa các cặp tiêu chí để xác định trọng
+              số tối ưu
+            </p>
+          </div>
+          <div class="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+            <!-- Matrix Input Area -->
+            <div class="xl:col-span-8">
+              <div
+                class="bg-white p-8 rounded-[2rem] shadow-sm border border-outline-variant/30 overflow-x-auto"
+              >
+                <div class="flex items-center gap-2 mb-8 text-primary">
+                  <span class="material-symbols-outlined">grid_view</span>
+                  <h4 class="font-bold text-xl text-on-surface">
+                    Thiết lập Ma trận So sánh
+                  </h4>
+                </div>
+                <table class="w-full text-left ahp-matrix min-w-[700px]">
+                  <thead>
+                    <tr class="border-b border-outline-variant/30">
+                      <th
+                        class="pb-4 font-bold text-xs uppercase tracking-widest text-on-surface-variant"
+                      >
+                        Tiêu chí
+                      </th>
+                      <th
+                        class="pb-4 font-bold text-xs uppercase tracking-widest text-center text-on-surface-variant"
+                      >
+                        Doanh thu
+                      </th>
+                      <th
+                        class="pb-4 font-bold text-xs uppercase tracking-widest text-center text-on-surface-variant"
+                      >
+                        Tiếp cận
+                      </th>
+                      <th
+                        class="pb-4 font-bold text-xs uppercase tracking-widest text-center text-on-surface-variant"
+                      >
+                        Chi phí
+                      </th>
+                      <th
+                        class="pb-4 font-bold text-xs uppercase tracking-widest text-center text-on-surface-variant"
+                      >
+                        Cạnh tranh
+                      </th>
+                      <th
+                        class="pb-4 font-bold text-xs uppercase tracking-widest text-center text-on-surface-variant"
+                      >
+                        Rủi ro
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-outline-variant/10">
+                    <tr>
+                      <td class="py-6 font-bold text-sm">Doanh thu</td>
+                      <td class="py-4 text-center">
+                        <div
+                          class="mx-auto w-12 h-10 flex items-center justify-center rounded-lg bg-surface-container text-slate-400 font-bold"
+                        >
+                          1
+                        </div>
+                      </td>
+                      <td class="py-4 px-2">
+                        <input
+                          class="w-full text-center py-2 rounded-xl border-outline-variant/40 focus:ring-primary focus:border-primary font-bold text-primary bg-primary/5"
+                          max="9"
+                          min="1"
+                          type="number"
+                          value="3"
+                        />
+                      </td>
+                      <td class="py-4 px-2">
+                        <input
+                          class="w-full text-center py-2 rounded-xl border-outline-variant/40 focus:ring-primary focus:border-primary font-bold text-primary bg-primary/5"
+                          max="9"
+                          min="1"
+                          type="number"
+                          value="5"
+                        />
+                      </td>
+                      <td class="py-4 px-2">
+                        <input
+                          class="w-full text-center py-2 rounded-xl border-outline-variant/40 focus:ring-primary focus:border-primary font-bold text-primary bg-primary/5"
+                          max="9"
+                          min="1"
+                          type="number"
+                          value="2"
+                        />
+                      </td>
+                      <td class="py-4 px-2">
+                        <input
+                          class="w-full text-center py-2 rounded-xl border-outline-variant/40 focus:ring-primary focus:border-primary font-bold text-primary bg-primary/5"
+                          max="9"
+                          min="1"
+                          type="number"
+                          value="4"
+                        />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="py-6 font-bold text-sm">Tiếp cận</td>
+                      <td class="py-4 text-center">
+                        <div
+                          class="mx-auto w-12 h-10 flex items-center justify-center rounded-lg bg-surface-container text-slate-400 font-bold"
+                        >
+                          1/3
+                        </div>
+                      </td>
+                      <td class="py-4 text-center">
+                        <div
+                          class="mx-auto w-12 h-10 flex items-center justify-center rounded-lg bg-surface-container text-slate-400 font-bold"
+                        >
+                          1
+                        </div>
+                      </td>
+                      <td class="py-4 px-2">
+                        <input
+                          class="w-full text-center py-2 rounded-xl border-outline-variant/40 focus:ring-primary focus:border-primary font-bold text-primary bg-primary/5"
+                          max="9"
+                          min="1"
+                          type="number"
+                          value="2"
+                        />
+                      </td>
+                      <td class="py-4 px-2">
+                        <input
+                          class="w-full text-center py-2 rounded-xl border-outline-variant/40 focus:ring-primary focus:border-primary font-bold text-primary bg-primary/5"
+                          max="9"
+                          min="1"
+                          type="number"
+                          value="4"
+                        />
+                      </td>
+                      <td class="py-4 px-2">
+                        <input
+                          class="w-full text-center py-2 rounded-xl border-outline-variant/40 focus:ring-primary focus:border-primary font-bold text-primary bg-primary/5"
+                          max="9"
+                          min="1"
+                          type="number"
+                          value="3"
+                        />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="py-6 font-bold text-sm">Chi phí</td>
+                      <td class="py-4 text-center">
+                        <div
+                          class="mx-auto w-12 h-10 flex items-center justify-center rounded-lg bg-surface-container text-slate-400 font-bold"
+                        >
+                          1/5
+                        </div>
+                      </td>
+                      <td class="py-4 text-center">
+                        <div
+                          class="mx-auto w-12 h-10 flex items-center justify-center rounded-lg bg-surface-container text-slate-400 font-bold"
+                        >
+                          1/2
+                        </div>
+                      </td>
+                      <td class="py-4 text-center">
+                        <div
+                          class="mx-auto w-12 h-10 flex items-center justify-center rounded-lg bg-surface-container text-slate-400 font-bold"
+                        >
+                          1
+                        </div>
+                      </td>
+                      <td class="py-4 px-2">
+                        <input
+                          class="w-full text-center py-2 rounded-xl border-outline-variant/40 focus:ring-primary focus:border-primary font-bold text-primary bg-primary/5"
+                          max="9"
+                          min="1"
+                          type="number"
+                          value="3"
+                        />
+                      </td>
+                      <td class="py-4 px-2">
+                        <input
+                          class="w-full text-center py-2 rounded-xl border-outline-variant/40 focus:ring-primary focus:border-primary font-bold text-primary bg-primary/5"
+                          max="9"
+                          min="1"
+                          type="number"
+                          value="2"
+                        />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="py-6 font-bold text-sm">Cạnh tranh</td>
+                      <td class="py-4 text-center">
+                        <div
+                          class="mx-auto w-12 h-10 flex items-center justify-center rounded-lg bg-surface-container text-slate-400 font-bold"
+                        >
+                          1/2
+                        </div>
+                      </td>
+                      <td class="py-4 text-center">
+                        <div
+                          class="mx-auto w-12 h-10 flex items-center justify-center rounded-lg bg-surface-container text-slate-400 font-bold"
+                        >
+                          1/4
+                        </div>
+                      </td>
+                      <td class="py-4 text-center">
+                        <div
+                          class="mx-auto w-12 h-10 flex items-center justify-center rounded-lg bg-surface-container text-slate-400 font-bold"
+                        >
+                          1/3
+                        </div>
+                      </td>
+                      <td class="py-4 text-center">
+                        <div
+                          class="mx-auto w-12 h-10 flex items-center justify-center rounded-lg bg-surface-container text-slate-400 font-bold"
+                        >
+                          1
+                        </div>
+                      </td>
+                      <td class="py-4 px-2">
+                        <input
+                          class="w-full text-center py-2 rounded-xl border-outline-variant/40 focus:ring-primary focus:border-primary font-bold text-primary bg-primary/5"
+                          max="9"
+                          min="1"
+                          type="number"
+                          value="2"
+                        />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="py-6 font-bold text-sm">Rủi ro</td>
+                      <td class="py-4 text-center">
+                        <div
+                          class="mx-auto w-12 h-10 flex items-center justify-center rounded-lg bg-surface-container text-slate-400 font-bold"
+                        >
+                          1/4
+                        </div>
+                      </td>
+                      <td class="py-4 text-center">
+                        <div
+                          class="mx-auto w-12 h-10 flex items-center justify-center rounded-lg bg-surface-container text-slate-400 font-bold"
+                        >
+                          1/3
+                        </div>
+                      </td>
+                      <td class="py-4 text-center">
+                        <div
+                          class="mx-auto w-12 h-10 flex items-center justify-center rounded-lg bg-surface-container text-slate-400 font-bold"
+                        >
+                          1/2
+                        </div>
+                      </td>
+                      <td class="py-4 text-center">
+                        <div
+                          class="mx-auto w-12 h-10 flex items-center justify-center rounded-lg bg-surface-container text-slate-400 font-bold"
+                        >
+                          1/2
+                        </div>
+                      </td>
+                      <td class="py-4 text-center">
+                        <div
+                          class="mx-auto w-12 h-10 flex items-center justify-center rounded-lg bg-surface-container text-slate-400 font-bold"
+                        >
+                          1
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div
+                  class="mt-8 p-4 bg-surface-container-low rounded-2xl flex items-start gap-3"
+                >
+                  <span
+                    class="material-symbols-outlined text-primary text-sm mt-0.5"
+                    >info</span
+                  >
+                  <p class="text-xs text-on-surface-variant leading-relaxed">
+                    <strong>Hướng dẫn:</strong> Nhập giá trị từ 1 đến 9 cho các
+                    ô phía trên đường chéo. 1: Ngang nhau; 3: Quan trọng hơn một
+                    chút; 5: Quan trọng hơn nhiều; 7: Rất quan trọng; 9: Cực kỳ
+                    quan trọng.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <!-- Results Sidebar -->
+            <div class="xl:col-span-4 space-y-8">
+              <div
+                class="bg-primary p-8 rounded-[2rem] text-white shadow-xl shadow-primary/20 relative overflow-hidden"
+              >
+                <div class="relative z-10">
+                  <div
+                    class="text-white/70 font-bold text-xs tracking-widest uppercase mb-2"
+                  >
+                    Điểm Hiệu Quả Tổng Thể
+                  </div>
+                  <div class="text-6xl font-extrabold mb-2">0.86</div>
+                  <div
+                    class="inline-flex items-center gap-1.5 px-3 py-1 bg-white/20 rounded-full text-xs font-bold"
+                  >
+                    <span class="material-symbols-outlined text-sm"
+                      >verified</span
+                    >
+                    Rất Khả Thi
+                  </div>
+                  <p class="text-sm text-white/70 mt-6 leading-relaxed">
+                    Dựa trên ma trận so sánh của bạn, "Doanh thu" đang chiếm ưu
+                    thế lớn nhất.
+                  </p>
+                </div>
+                <div
+                  class="absolute -bottom-6 -right-6 w-32 h-32 bg-white/10 rounded-full blur-2xl"
+                ></div>
+              </div>
+              <div
+                class="bg-white p-8 rounded-[2rem] shadow-sm border border-outline-variant/30"
+              >
+                <h4 class="font-bold text-lg mb-6 flex items-center gap-2">
+                  <span class="material-symbols-outlined text-primary"
+                    >analytics</span
+                  >
+                  Trọng số Kết quả (%)
+                </h4>
+                <div class="space-y-5">
+                  <div>
+                    <div
+                      class="flex justify-between text-xs font-bold mb-2 text-on-surface-variant"
+                    >
+                      <span>DOANH THU</span><span>38%</span>
+                    </div>
+                    <div
+                      class="w-full h-2.5 bg-surface-container rounded-full overflow-hidden"
+                    >
+                      <div class="h-full bg-primary" style="width: 38%"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div
+                      class="flex justify-between text-xs font-bold mb-2 text-on-surface-variant"
+                    >
+                      <span>TIẾP CẬN</span><span>24%</span>
+                    </div>
+                    <div
+                      class="w-full h-2.5 bg-surface-container rounded-full overflow-hidden"
+                    >
+                      <div
+                        class="h-full bg-primary/80"
+                        style="width: 24%"
+                      ></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div
+                      class="flex justify-between text-xs font-bold mb-2 text-on-surface-variant"
+                    >
+                      <span>CHI PHÍ THUÊ</span><span>16%</span>
+                    </div>
+                    <div
+                      class="w-full h-2.5 bg-surface-container rounded-full overflow-hidden"
+                    >
+                      <div
+                        class="h-full bg-primary/60"
+                        style="width: 16%"
+                      ></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div
+                      class="flex justify-between text-xs font-bold mb-2 text-on-surface-variant"
+                    >
+                      <span>CẠNH TRANH</span><span>12%</span>
+                    </div>
+                    <div
+                      class="w-full h-2.5 bg-surface-container rounded-full overflow-hidden"
+                    >
+                      <div
+                        class="h-full bg-primary/40"
+                        style="width: 12%"
+                      ></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div
+                      class="flex justify-between text-xs font-bold mb-2 text-on-surface-variant"
+                    >
+                      <span>RỦI RO</span><span>10%</span>
+                    </div>
+                    <div
+                      class="w-full h-2.5 bg-surface-container rounded-full overflow-hidden"
+                    >
+                      <div
+                        class="h-full bg-primary/20"
+                        style="width: 10%"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="mt-8 pt-6 border-t border-outline-variant/30">
+                  <div class="flex items-end justify-between h-24 px-2">
+                    <div
+                      class="w-8 bg-primary rounded-t-lg"
+                      style="height: 90%"
+                    ></div>
+                    <div
+                      class="w-8 bg-primary-fixed-dim rounded-t-lg"
+                      style="height: 65%"
+                    ></div>
+                    <div
+                      class="w-8 bg-primary-fixed-dim rounded-t-lg"
+                      style="height: 45%"
+                    ></div>
+                    <div
+                      class="w-8 bg-primary-fixed-dim rounded-t-lg"
+                      style="height: 30%"
+                    ></div>
+                    <div
+                      class="w-8 bg-primary-fixed-dim rounded-t-lg"
+                      style="height: 25%"
+                    ></div>
+                  </div>
+                  <div
+                    class="flex justify-between mt-3 px-1 text-[9px] font-bold text-on-surface-variant uppercase tracking-tighter"
+                  >
+                    <span>Rev</span><span>Acc</span><span>Rent</span
+                    ><span>Comp</span><span>Risk</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Process Section ── -->
+        <section class="py-24 bg-surface">
+          <div class="max-w-7xl mx-auto px-6">
+            <h2 class="text-4xl font-bold text-center mb-20">
+              Quy trình phân tích 4 bước
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 relative">
+              <div
+                class="relative p-8 bg-surface-container-low rounded-3xl group"
+              >
+                <span
+                  class="absolute -top-10 -left-4 text-9xl font-extrabold text-outline-variant opacity-20 pointer-events-none group-hover:opacity-40 transition-opacity"
+                  >01</span
+                >
+                <div class="relative z-10">
+                  <h3 class="text-xl font-bold mb-4">Nhập tiêu chí</h3>
+                  <p class="text-sm text-on-surface-variant leading-relaxed">
+                    Định nghĩa các yếu tố ảnh hưởng đến sự thành công của mặt
+                    bằng.
+                  </p>
+                </div>
+              </div>
+              <div
+                class="relative p-8 bg-surface-container-lowest rounded-3xl group shadow-sm"
+              >
+                <span
+                  class="absolute -top-10 -left-4 text-9xl font-extrabold text-outline-variant opacity-20 pointer-events-none group-hover:opacity-40 transition-opacity"
+                  >02</span
+                >
+                <div class="relative z-10">
+                  <h3 class="text-xl font-bold mb-4">So sánh cặp</h3>
+                  <p class="text-sm text-on-surface-variant leading-relaxed">
+                    So sánh mức độ quan trọng giữa 2 tiêu chí theo thang điểm
+                    Saaty.
+                  </p>
+                </div>
+              </div>
+              <div
+                class="relative p-8 bg-surface-container-low rounded-3xl group"
+              >
+                <span
+                  class="absolute -top-10 -left-4 text-9xl font-extrabold text-outline-variant opacity-20 pointer-events-none group-hover:opacity-40 transition-opacity"
+                  >03</span
+                >
+                <div class="relative z-10">
+                  <h3 class="text-xl font-bold mb-4">Tính trọng số</h3>
+                  <p class="text-sm text-on-surface-variant leading-relaxed">
+                    Hệ thống tự động tính toán vecto riêng và kiểm tra tính nhất
+                    quán.
+                  </p>
+                </div>
+              </div>
+              <div class="relative p-8 bg-primary rounded-3xl group">
+                <span
+                  class="absolute -top-10 -left-4 text-9xl font-extrabold text-white/10 pointer-events-none group-hover:opacity-20 transition-opacity"
+                  >04</span
+                >
+                <div class="relative z-10 text-white">
+                  <h3 class="text-xl font-bold mb-4">Xem kết quả</h3>
+                  <p class="text-sm opacity-90 leading-relaxed">
+                    Nhận báo cáo so sánh chi tiết và đưa ra quyết định đầu tư
+                    chính xác.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── CTA Section ── -->
+        <section class="py-24 px-6">
+          <div
+            class="max-w-5xl mx-auto bg-slate-900 rounded-[3rem] p-12 md:p-24 text-center relative overflow-hidden"
+          >
+            <div
+              class="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent"
+            ></div>
+            <div class="relative z-10 space-y-8">
+              <h2
+                class="text-4xl md:text-6xl font-bold text-white tracking-tight"
+              >
+                Sẵn sàng chọn địa điểm tốt nhất?
+              </h2>
+              <p class="text-slate-400 text-lg max-w-2xl mx-auto">
+                Bắt đầu mô hình hóa các tiêu chí của bạn ngay hôm nay với công
+                cụ AHP chuyên sâu nhất thị trường.
+              </p>
+              <button
+                id="openAuthBtn3"
+                class="bg-primary text-white px-12 py-5 rounded-full font-bold text-xl hover:scale-105 transition-transform shadow-2xl shadow-primary/40"
+              >
+                Đăng nhập ngay
+              </button>
+            </div>
+            <div
+              class="absolute -top-10 -right-10 w-40 h-40 bg-primary/20 rounded-full blur-3xl"
+            ></div>
+            <div
+              class="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl"
+            ></div>
+          </div>
+        </section>
+      </div>
+      <!-- End view-home -->
+
+      <!-- ── View About Us ── -->
+      <div
+        id="view-about"
+        class="page-view hidden opacity-0 relative transition-all duration-300 min-h-[60vh] pb-24"
+      >
+        <section class="max-w-4xl mx-auto px-6 py-20 md:py-24">
+          <div class="text-center mb-16">
+            <span
+              class="text-primary font-bold tracking-widest text-xs uppercase"
+              >Giới thiệu</span
+            >
+            <h2 class="text-4xl md:text-5xl font-bold mt-4 mb-6">
+              Hệ thống phân tích địa điểm AHP
+            </h2>
+            <p class="text-lg text-on-surface-variant leading-relaxed">
+              Chúng tôi mang đến giải pháp công nghệ DSS (Decision Support
+              System) giúp các doanh nghiệp, người kinh doanh loại bỏ tính chủ
+              quan trong việc ra quyết định đầu tư, chuyển đổi dữ liệu thành lợi
+              thế cạnh tranh cốt lõi.
+            </p>
+          </div>
+          <div
+            class="bg-surface-container-lowest p-10 md:p-14 rounded-[3rem] shadow-xl border border-outline-variant/30 relative overflow-hidden"
+          >
+            <div
+              class="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2"
+            ></div>
+            <div class="relative z-10 space-y-8">
+              <div>
+                <h3 class="text-2xl font-bold mb-3 flex items-center gap-2">
+                  <span class="material-symbols-outlined text-primary"
+                    >target</span
+                  >
+                  Sứ mệnh
+                </h3>
+                <p class="text-on-surface-variant leading-relaxed">
+                  Cung cấp bộ công cụ phân tích chuẩn quốc tế (AHP - Analytic
+                  Hierarchy Process) với giao diện tối giản, dễ sử dụng, nhằm mô
+                  hình hóa và lượng hóa các tiêu chí vị trí khó đong đếm nhất.
+                </p>
+              </div>
+              <div>
+                <h3 class="text-2xl font-bold mb-3 flex items-center gap-2">
+                  <span class="material-symbols-outlined text-primary"
+                    >verified_user</span
+                  >
+                  Độ tin cậy
+                </h3>
+                <p class="text-on-surface-variant leading-relaxed">
+                  Thuật toán ma trận và véc tơ riêng được đảm bảo tính nhất quán
+                  qua thang đo Saaty chuẩn xác. Tích hợp công cụ tính tỷ số CR
+                  để loại trừ mọi sai số phán đoán.
+                </p>
+              </div>
+              <div
+                class="pt-6 border-t border-outline-variant/20 flex gap-6 items-center"
+              >
+                <div class="flex -space-x-4">
+                  <img
+                    class="w-12 h-12 rounded-full border-2 border-white shadow-sm"
+                    src="https://ui-avatars.com/api/?name=AHP+Pro&background=0D8ABC&color=fff"
+                    alt="Avatar"
+                  />
+                </div>
+                <div>
+                  <div class="font-bold text-sm">
+                    Đội ngũ phát triển AHP Location
+                  </div>
+                  <div class="text-xs text-on-surface-variant">
+                    Quyết đoán. Thông minh. Hiệu quả.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ── View Contact ── -->
+      <div
+        id="view-contact"
+        class="page-view hidden opacity-0 relative transition-all duration-300 min-h-[60vh] pb-24"
+      >
+        <section
+          class="max-w-6xl mx-auto px-6 py-20 md:py-24 grid grid-cols-1 lg:grid-cols-5 gap-12 lg:gap-20"
+        >
+          <div class="lg:col-span-2 space-y-8">
+            <div>
+              <span
+                class="text-primary font-bold tracking-widest text-xs uppercase"
+                >Hỗ trợ 24/7</span
+              >
+              <h2 class="text-4xl font-bold mt-4 mb-6">
+                Liên hệ với chúng tôi
+              </h2>
+              <p class="text-on-surface-variant leading-relaxed">
+                Mọi phản hồi, góp ý hoặc yêu cầu hỗ trợ hệ thống vui lòng gửi
+                cho chúng tôi. Chúng tôi sẽ xử lý và phản hồi sớm nhất.
+              </p>
+            </div>
+            <div class="space-y-6">
+              <div class="flex items-start gap-4">
+                <div
+                  class="w-12 h-12 rounded-2xl bg-surface-container-low flex items-center justify-center text-primary shrink-0"
+                >
+                  <span class="material-symbols-outlined">location_on</span>
+                </div>
+                <div>
+                  <div class="font-bold text-sm mb-1">Văn phòng chính</div>
+                  <div class="text-sm text-on-surface-variant">
+                    123 Đường Công Nghệ, Quận 1, TP. HCM
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-start gap-4">
+                <div
+                  class="w-12 h-12 rounded-2xl bg-surface-container-low flex items-center justify-center text-primary shrink-0"
+                >
+                  <span class="material-symbols-outlined">mail</span>
+                </div>
+                <div>
+                  <div class="font-bold text-sm mb-1">Email CSKH</div>
+                  <div class="text-sm text-on-surface-variant">
+                    support@ahplocation.vn
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-start gap-4">
+                <div
+                  class="w-12 h-12 rounded-2xl bg-surface-container-low flex items-center justify-center text-primary shrink-0"
+                >
+                  <span class="material-symbols-outlined">phone_callback</span>
+                </div>
+                <div>
+                  <div class="font-bold text-sm mb-1">Hotline</div>
+                  <div class="text-sm text-on-surface-variant">
+                    1800 888 999 (Miễn cước)
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="lg:col-span-3">
+            <div
+              class="bg-white p-8 md:p-12 rounded-[2rem] shadow-xl shadow-primary/5 border border-outline-variant/30"
+            >
+              <form
+                class="space-y-6"
+                onsubmit="
+                  event.preventDefault();
+                  showToast(
+                    'Tin nhắn đã được gửi. Chúng tôi sẽ sớm liên hệ lại với bạn!',
+                    'success',
+                  );
+                  this.reset();
+                "
+              >
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label
+                      class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2 block"
+                      >Họ và tên</label
+                    >
+                    <input
+                      type="text"
+                      placeholder="Nguyễn Văn A"
+                      class="w-full bg-surface-container-low border-transparent focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-xl px-5 py-4 text-sm transition-all"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label
+                      class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2 block"
+                      >Email</label
+                    >
+                    <input
+                      type="email"
+                      placeholder="example@email.com"
+                      class="w-full bg-surface-container-low border-transparent focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-xl px-5 py-4 text-sm transition-all"
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label
+                    class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2 block"
+                    >Nội dung tin nhắn</label
+                  >
+                  <textarea
+                    rows="4"
+                    placeholder="Nhập câu hỏi, yêu cầu hoặc phản hồi của bạn..."
+                    class="w-full bg-surface-container-low border-transparent focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-xl px-5 py-4 text-sm resize-none transition-all"
+                    required
+                  ></textarea>
+                </div>
+                <button
+                  type="submit"
+                  class="bg-primary text-white font-bold py-4 px-8 rounded-xl hover:shadow-lg hover:shadow-primary/30 transition-all transform hover:-translate-y-1 inline-flex items-center gap-2"
+                >
+                  Gửi tin nhắn
+                  <span class="material-symbols-outlined text-sm">send</span>
+                </button>
+              </form>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ── View AHP Pipeline ── -->
+      <div
+        id="view-ahp"
+        class="page-view hidden opacity-0 relative transition-all duration-300 min-h-[60vh] pb-24 bg-surface-container-low"
+      >
+        <section class="max-w-5xl mx-auto px-6 py-16 md:py-20">
+          <!-- Page Title -->
+          <div class="mb-10">
+            <span
+              class="text-primary font-bold tracking-widest text-xs uppercase"
+              >Phân tích AHP</span
+            >
+            <h2 class="text-3xl font-bold mt-2 text-on-surface">
+              Tính trọng số tiêu chí
+            </h2>
+            <p class="text-sm text-on-surface-variant mt-1">
+              Nhập ma trận so sánh cặp — hệ thống tự động tính trọng số và kiểm
+              định tính nhất quán CR.
+            </p>
+          </div>
+
+          <!-- Stepper Track -->
+          <div class="flex items-center mb-8">
+            <div
+              class="flex flex-col items-center flex-shrink-0"
+              id="ahp-track1"
+            >
+              <div
+                id="ahp-track1-circle"
+                class="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shadow-[0_4px_10px_rgba(0,87,205,0.3)] transition-all"
+              >
+                1
+              </div>
+              <span
+                class="text-[11px] font-semibold text-primary mt-1 whitespace-nowrap"
+                >Ma trận &amp; Trọng số</span
+              >
+            </div>
+            <div class="flex-1 h-0.5 bg-slate-200 mx-3"></div>
+            <div
+              class="flex flex-col items-center flex-shrink-0 opacity-40"
+              id="ahp-track2"
+            >
+              <div
+                id="ahp-track2-circle"
+                class="w-9 h-9 rounded-full bg-slate-300 text-slate-600 flex items-center justify-center font-bold text-sm transition-all"
+              >
+                2
+              </div>
+              <span
+                class="text-[11px] font-semibold text-slate-500 mt-1 whitespace-nowrap"
+                >Kiểm tra CR</span
+              >
+            </div>
+            <div class="flex-1 h-0.5 bg-slate-200 mx-3"></div>
+            <div
+              class="flex flex-col items-center flex-shrink-0 opacity-40"
+              id="ahp-track3"
+            >
+              <div
+                id="ahp-track3-circle"
+                class="w-9 h-9 rounded-full bg-slate-300 text-slate-600 flex items-center justify-center font-bold text-sm transition-all"
+              >
+                3
+              </div>
+              <span
+                class="text-[11px] font-semibold text-slate-500 mt-1 whitespace-nowrap"
+                >Đánh giá tiêu chí</span
+              >
+            </div>
+            <div class="flex-1 h-0.5 bg-slate-200 mx-3"></div>
+            <div
+              class="flex flex-col items-center flex-shrink-0 opacity-40"
+              id="ahp-track4"
+            >
+              <div
+                id="ahp-track4-circle"
+                class="w-9 h-9 rounded-full bg-slate-300 text-slate-600 flex items-center justify-center font-bold text-sm transition-all"
+              >
+                4
+              </div>
+              <span
+                class="text-[11px] font-semibold text-slate-500 mt-1 whitespace-nowrap"
+                >Phân tích địa điểm</span
+              >
+            </div>
+          </div>
+
+          <!-- Step Panels -->
+          <div
+            class="bg-white/80 backdrop-blur-xl border border-primary/10 rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] overflow-hidden"
+          >
+            <!-- STEP 1: Ma trận và Trọng số -->
+            <div id="ahp-step1" class="p-6">
+              <span
+                class="text-[10px] font-bold tracking-widest uppercase text-slate-400 bg-slate-100 px-2 py-1 rounded"
+                >Bước 1 / 4</span
+              >
+              <div class="font-bold text-lg text-on-surface mt-3 mb-1">
+                📊 Tính toán Ma trận &amp; Trọng số
+              </div>
+              <p class="text-sm text-slate-500 mb-5">
+                Chọn khu vực phân tích và hệ thống sẽ lấy dữ liệu địa điểm tương
+                ứng để đánh giá.
+              </p>
+
+              <!-- Area filter Form -->
+              <div
+                class="bg-slate-50 border border-slate-100 p-4 rounded-xl mb-6"
+              >
+                <h3
+                  class="font-bold text-sm text-slate-700 mb-3 flex items-center gap-2"
+                >
+                  <span
+                    class="material-symbols-outlined text-[18px] text-primary"
+                    >location_city</span
+                  >
+                  Khu vực phân tích
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label
+                      class="block text-xs font-semibold text-slate-500 mb-1"
+                      >Quận / Huyện</label
+                    >
+                    <select
+                      id="ahp-district"
+                      class="w-full bg-white border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-primary focus:border-primary block p-2.5 transition"
+                    >
+                      <option value="" selected>Tất cả Quận / Huyện</option>
+                      <option value="Quận 1">Quận 1</option>
+                      <option value="Quận 3">Quận 3</option>
+                      <option value="Quận 10">Quận 10</option>
+                      <option value="Tân Bình">Tân Bình</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label
+                      class="block text-xs font-semibold text-slate-500 mb-1"
+                      >Phường / Xã</label
+                    >
+                    <select
+                      id="ahp-ward"
+                      class="w-full bg-white border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-primary focus:border-primary block p-2.5 transition"
+                    >
+                      <option value="" selected>Tất cả Phường / Xã</option>
+                      <option value="Phường 1">Phường 1</option>
+                      <option value="Phường 2">Phường 2</option>
+                      <option value="Phường 3">Phường 3</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label
+                      class="block text-xs font-semibold text-slate-500 mb-1"
+                      >Tên đường</label
+                    >
+                    <input
+                      type="text"
+                      id="ahp-street"
+                      placeholder="Nhập tên đường..."
+                      class="w-full bg-white border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-primary focus:border-primary block p-2.5 transition"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <p class="text-sm text-slate-500 mb-3 font-semibold">
+                Nhập ma trận so sánh cặp để tính trọng số:
+              </p>
+              <!-- AHP Matrix Table -->
+              <div id="ahp-criteriaList" class="overflow-x-auto"></div>
+
+              <!-- Result area for step 1 -->
+              <div id="ahp-step1Body" class="mt-4"></div>
+
+              <div class="flex justify-end mt-5">
+                <button
+                  id="ahp-step1Btn"
+                  class="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-primary to-[#0d6efd] text-white font-bold rounded-xl text-sm shadow-[0_4px_14px_rgba(0,87,205,0.25)] hover:-translate-y-0.5 transition"
+                >
+                  Xây dựng ma trận &amp; Tính tổng cột
+                  <span class="material-symbols-outlined text-base"
+                    >arrow_forward</span
+                  >
+                </button>
+              </div>
+            </div>
+
+            <!-- STEP 2: Kiểm tra CR -->
+            <div id="ahp-step2" class="hidden p-6">
+              <span
+                class="text-[10px] font-bold tracking-widest uppercase text-slate-400 bg-slate-100 px-2 py-1 rounded"
+                >Bước 2 / 3</span
+              >
+              <div class="font-bold text-lg text-on-surface mt-3 mb-1">
+                ✅ Kiểm tra Tính nhất quán (CR)
+              </div>
+              <p class="text-sm text-slate-500 mb-5">
+                Kiểm tra Consistency Ratio. CR &lt; 0.1 thì ma trận hợp lệ để
+                tiếp tục.
+              </p>
+              <div id="ahp-step2Body" class="text-sm text-slate-400 italic">
+                Nhấn <strong>Tính CR</strong> để kiểm tra tính nhất quán.
+              </div>
+              <div class="flex justify-between mt-5">
+                <button
+                  id="ahp-step2BackBtn"
+                  class="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl text-sm hover:bg-slate-50 transition"
+                >
+                  <span class="material-symbols-outlined text-base"
+                    >arrow_back</span
+                  >
+                  Quay lại
+                </button>
+                <button
+                  id="ahp-step2Btn"
+                  class="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-primary to-[#0d6efd] text-white font-bold rounded-xl text-sm shadow-[0_4px_14px_rgba(0,87,205,0.25)] hover:-translate-y-0.5 transition"
+                >
+                  Tính CR
+                  <span class="material-symbols-outlined text-base"
+                    >arrow_forward</span
+                  >
+                </button>
+              </div>
+            </div>
+
+            <!-- STEP 3: Đánh giá tiêu chí theo phương án -->
+            <div id="ahp-step3" class="hidden p-6">
+              <span
+                class="text-[10px] font-bold tracking-widest uppercase text-slate-400 bg-slate-100 px-2 py-1 rounded"
+                >Bước 3 / 4</span
+              >
+              <div class="font-bold text-lg text-on-surface mt-3 mb-1">
+                📊 Đánh giá tiêu chí theo phương án
+              </div>
+              <p class="text-sm text-slate-500 mb-5">
+                Ma trận so sánh cặp các địa điểm theo từng tiêu chí AHP. Local
+                Weight cho biết địa điểm nào ưu tiên hơn.
+              </p>
+
+              <div
+                id="ahp-step3Body"
+                class="text-sm text-slate-400 italic mb-4"
+              >
+                Nhấn <strong>Đánh giá tiêu chí</strong> để tải dữ liệu.
+              </div>
+
+              <!-- Tab Bar -->
+              <div
+                id="ahp-criteriaTabs"
+                class="flex flex-wrap gap-2 mb-4 hidden"
+              ></div>
+              <!-- Matrix Panel -->
+              <div id="ahp-criteriaPanel" class="hidden"></div>
+
+              <div class="flex justify-between mt-5">
+                <button
+                  id="ahp-step3BackBtn"
+                  class="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl text-sm hover:bg-slate-50 transition"
+                >
+                  <span class="material-symbols-outlined text-base"
+                    >arrow_back</span
+                  >
+                  Quay lại
+                </button>
+                <button
+                  id="ahp-step3Btn"
+                  class="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-primary to-[#0d6efd] text-white font-bold rounded-xl text-sm shadow-[0_4px_14px_rgba(0,87,205,0.25)] hover:-translate-y-0.5 transition"
+                >
+                  <span class="material-symbols-outlined text-base"
+                    >analytics</span
+                  >
+                  Đánh giá tiêu chí
+                </button>
+              </div>
+            </div>
+
+            <!-- STEP 4: Phân tích địa điểm & Xem bản đồ -->
+            <div id="ahp-step4" class="hidden p-6">
+              <span
+                class="text-[10px] font-bold tracking-widest uppercase text-slate-400 bg-slate-100 px-2 py-1 rounded"
+                >Bước 4 / 4</span
+              >
+              <div class="font-bold text-lg text-on-surface mt-3 mb-1">
+                🗺️ Phân tích địa điểm &amp; Xem bản đồ
+              </div>
+              <p class="text-sm text-slate-500 mb-5">
+                Phân tích tất cả địa điểm theo trọng số AHP và hiển thị lên bản
+                đồ kết quả.
+              </p>
+              <div id="ahp-step4Body" class="text-sm text-slate-400 italic">
+                Nhấn <strong>Phân tích &amp; Xem bản đồ</strong> để bắt đầu.
+              </div>
+              <div class="flex justify-between mt-5">
+                <button
+                  id="ahp-step4BackBtn"
+                  class="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl text-sm hover:bg-slate-50 transition"
+                >
+                  <span class="material-symbols-outlined text-base"
+                    >arrow_back</span
+                  >
+                  Quay lại
+                </button>
+                <button
+                  id="ahp-step4Btn"
+                  class="flex items-center gap-2 px-6 py-2.5 bg-primary text-white font-bold rounded-xl text-sm shadow-[0_4px_14px_rgba(0,87,205,0.25)] hover:-translate-y-0.5 transition"
+                >
+                  <span class="material-symbols-outlined text-base"
+                    >rocket_launch</span
+                  >
+                  Phân tích &amp; Xem bản đồ
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- /step panels -->
+        </section>
+      </div>
+
+      <!-- ── View Projects ── -->
+      <div
+        id="view-projects"
+        class="page-view hidden opacity-0 relative transition-all duration-300 min-h-[60vh] pb-24 bg-surface-container-low"
+      >
+        <section class="max-w-7xl mx-auto px-6 py-20 md:py-24">
+          <div
+            class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4"
+          >
+            <div>
+              <h2 class="text-3xl font-bold text-on-surface">Quản lý dự án</h2>
+              <p class="text-sm text-on-surface-variant mt-2">
+                Danh sách các dự án đánh giá địa điểm của bạn
+              </p>
+            </div>
+            <button
+              id="btnOpenNewProject"
+              class="bg-primary text-white px-6 py-3 rounded-xl font-bold text-sm hover:shadow-lg transition-all shadow-primary/30 flex items-center gap-2"
+            >
+              <span class="material-symbols-outlined text-[18px]">add</span> Mở
+              dự án mới
+            </button>
+          </div>
+
+          <!-- User's Projects Grid -->
+          <div
+            id="projectsGrid"
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
+            <div
+              class="col-span-1 md:col-span-2 lg:col-span-3 text-center py-12 text-slate-500"
+            >
+              <span class="material-symbols-outlined animate-spin text-3xl mb-2"
+                >progress_activity</span
+              >
+              <p>Đang tải danh sách dự án...</p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- View Profile -->
+      <div
+        id="view-profile"
+        class="page-view hidden opacity-0 relative transition-all duration-300 min-h-[60vh] pb-24"
+      >
+        <section class="max-w-3xl mx-auto px-6 py-20 md:py-24">
+          <div
+            class="bg-white rounded-[2rem] shadow-[0_10px_40px_rgba(0,0,0,0.06)] border border-outline-variant/30 overflow-hidden relative"
+          >
+            <div
+              class="h-32 bg-gradient-to-r from-[rgba(0,100,255,0.8)] to-[rgba(13,110,253,0.9)] relative"
+            >
+              <button
+                class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/40 transition text-white"
+              >
+                <span class="material-symbols-outlined text-sm">edit</span>
+              </button>
+            </div>
+            <div class="px-8 pb-8 flex flex-col items-center md:items-start">
+              <div
+                class="-mt-16 mb-4 w-32 h-32 rounded-full border-4 border-white shadow-md bg-white flex items-center justify-center text-5xl font-bold text-primary"
+              >
+                <span class="material-symbols-outlined text-6xl">person</span>
+              </div>
+              <h2
+                id="profileName"
+                class="text-2xl font-bold text-slate-900 mb-1"
+              >
+                Dang tai...
+              </h2>
+              <p id="profileEmail" class="text-slate-500 mb-6 text-sm">@</p>
+
+              <div class="w-full grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="bg-slate-50 p-5 rounded-xl border border-slate-100">
+                  <label
+                    class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1"
+                    >Ho va ten</label
+                  >
+                  <input
+                    type="text"
+                    id="profileFullNameInput"
+                    placeholder="Ho va ten"
+                    class="w-full bg-transparent border-none p-0 text-sm font-semibold text-slate-700 focus:ring-0"
+                  />
+                </div>
+                <div class="bg-slate-50 p-5 rounded-xl border border-slate-100">
+                  <label
+                    class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1"
+                    >So dien thoai</label
+                  >
+                  <input
+                    type="text"
+                    id="profilePhoneInput"
+                    placeholder="So dien thoai"
+                    class="w-full bg-transparent border-none p-0 text-sm font-semibold text-slate-700 focus:ring-0"
+                  />
+                </div>
+              </div>
+
+              <div
+                class="w-full mt-4 bg-slate-50 p-5 rounded-xl border border-slate-100"
+              >
+                <label
+                  class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1"
+                  >Mat khau moi</label
+                >
+                <input
+                  type="password"
+                  id="profilePasswordInput"
+                  placeholder="De trong neu khong doi"
+                  class="w-full bg-transparent border-none p-0 text-sm font-semibold text-slate-700 focus:ring-0"
+                />
+              </div>
+
+              <button
+                id="btnUpdateProfile"
+                class="mt-6 w-full sm:w-auto flex items-center gap-2 px-5 py-2.5 bg-primary text-white font-bold rounded-xl text-sm hover:shadow-lg transition-all"
+              >
+                <span class="material-symbols-outlined text-base">save</span>
+                Cap nhat thong tin
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- AUTH MODAL -->
+    <div id="authModal">
+      <div class="modal-box w-full max-w-md mx-4 relative">
+        <div id="loginPanel" class="bg-white rounded-2xl shadow-2xl p-8">
+          <div class="text-center mb-6">
+            <div class="text-4xl mb-3">&#128274;</div>
+            <h2 class="text-xl font-bold text-slate-900">Dang nhap</h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Truy cap vao he thong AHP Location
+            </p>
+          </div>
+          <div class="space-y-4">
+            <div>
+              <label
+                class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1 block"
+                >Email</label
+              >
+              <input
+                id="loginEmail"
+                type="email"
+                placeholder="example@email.com"
+                class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary/40 outline-none transition-all"
+              />
+            </div>
+            <div>
+              <label
+                class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1 block"
+                >Mat khau</label
+              >
+              <input
+                id="loginPassword"
+                type="password"
+                placeholder="********"
+                class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary/40 outline-none transition-all"
+              />
+            </div>
+            <button
+              id="loginBtn"
+              class="w-full bg-gradient-to-r from-primary to-primary-container text-white font-bold py-3.5 rounded-xl hover:shadow-lg hover:shadow-primary/25 transition-all transform hover:-translate-y-0.5 active:scale-95 text-sm flex items-center justify-center gap-2"
+            >
+              <span class="material-symbols-outlined text-base leading-none"
+                >login</span
+              >
+              Dang nhap
+            </button>
+            <div class="flex items-center gap-3 text-slate-400 text-xs">
+              <div class="flex-1 h-px bg-slate-200"></div>
+              <span>hoac</span>
+              <div class="flex-1 h-px bg-slate-200"></div>
+            </div>
+            <button
+              id="googleLoginBtn"
+              class="w-full flex items-center justify-center gap-3 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-all"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  fill="#4285F4"
+                />
+                <path
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  fill="#34A853"
+                />
+                <path
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                  fill="#FBBC05"
+                />
+                <path
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                  fill="#EA4335"
+                />
+              </svg>
+              Dang nhap voi Google
+            </button>
+          </div>
+          <div class="text-center mt-5 text-sm text-slate-500">
+            Chua co tai khoan?
+            <button
+              id="showRegisterBtn"
+              class="text-primary font-bold hover:underline ml-1"
+            >
+              Dang ky
+            </button>
+          </div>
+          <button
+            id="closeAuthBtn"
+            class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors text-slate-400"
+          >
+            <span class="material-symbols-outlined text-lg">close</span>
+          </button>
+        </div>
+
+        <div
+          id="registerPanel"
+          class="hidden bg-white rounded-2xl shadow-2xl p-8"
+        >
+          <div class="text-center mb-6">
+            <div class="text-4xl mb-3">&#128221;</div>
+            <h2 class="text-xl font-bold text-slate-900">Tao tai khoan</h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Mien phi - bat dau ngay hom nay
+            </p>
+          </div>
+          <div class="space-y-3">
+            <div>
+              <label
+                class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1 block"
+                >Ho va ten</label
+              >
+              <input
+                id="registerFullname"
+                type="text"
+                placeholder="Nguyen Van A"
+                class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 outline-none transition-all"
+              />
+            </div>
+            <div>
+              <label
+                class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1 block"
+                >Email</label
+              >
+              <input
+                id="registerEmail"
+                type="email"
+                placeholder="example@email.com"
+                class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 outline-none transition-all"
+              />
+            </div>
+            <div>
+              <label
+                class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1 block"
+                >So dien thoai</label
+              >
+              <input
+                id="registerPhone"
+                type="text"
+                placeholder="0901 234 567"
+                class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 outline-none transition-all"
+              />
+            </div>
+            <div>
+              <label
+                class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1 block"
+                >Mat khau</label
+              >
+              <input
+                id="registerPassword"
+                type="password"
+                placeholder="********"
+                class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 outline-none transition-all"
+              />
+            </div>
+            <div>
+              <label
+                class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1 block"
+                >Xac nhan mat khau</label
+              >
+              <input
+                id="registerPasswordConfirm"
+                type="password"
+                placeholder="********"
+                class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 outline-none transition-all"
+              />
+            </div>
+            <button
+              id="registerBtn"
+              class="w-full bg-gradient-to-r from-primary to-primary-container text-white font-bold py-3.5 rounded-xl hover:shadow-lg hover:shadow-primary/25 transition-all transform hover:-translate-y-0.5 active:scale-95 text-sm flex items-center justify-center gap-2"
+            >
+              <span class="material-symbols-outlined text-base leading-none"
+                >person_add</span
+              >
+              Tao tai khoan
+            </button>
+          </div>
+          <div class="text-center mt-4 text-sm text-slate-500">
+            Da co tai khoan?
+            <button
+              id="showLoginBtn"
+              class="text-primary font-bold hover:underline ml-1"
+            >
+              Dang nhap
+            </button>
+          </div>
+          <button
+            id="closeAuthBtn2"
+            class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors text-slate-400"
+          >
+            <span class="material-symbols-outlined text-lg">close</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <script src="js/api.js"></script>
+    <script src="js/home/core.js"></script>
+    <script src="js/home/ui-helpers.js"></script>
+    <script src="js/home/views.js"></script>
+    <script src="js/home/auth.js"></script>
+    <script src="js/home/projects.js"></script>
+    <script src="js/home/profile.js"></script>
+    <script src="js/home/ahp-pipeline.js"></script>
+
+    <script src="js/toast.js"></script>
+    <script src="js/chatbot.js"></script>
+  </body>
+</html>
+
